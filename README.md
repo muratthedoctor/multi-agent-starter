@@ -45,7 +45,7 @@ Kurulumdan sonra her projede `explorer`/`coder`/`reviewer`/`tester` subagent'lar
 
 ## Operatör spesifikasyonu (AGENTS.md)
 
-`AGENTS.md` global değildir; her projede geçerli olmasını istediğinde o projenin köküne `AGENTS.md` olarak kopyala. Claude Code onu o proje için otomatik okur.
+`AGENTS.md` global değildir; her projede geçerli olmasını istediğinde o projenin köküne `AGENTS.md` olarak kopyala. Claude Code onu o proje için otomatik okur. Andrej Karpathy'nin AGENTS.md dosyasının içeriği kullanılmıştır.
 
 ## Güncelleme
 
