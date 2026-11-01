@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentTask",
+  "type": "object",
+  "required": ["task_id", "goal", "role", "acceptance_criteria"],
+  "properties": {
+    "task_id": {"type": "string"},
+    "goal": {"type": "string"},
+    "role": {"enum": ["explorer", "coder", "reviewer", "tester"]},
+    "context": {"type": "string"},
+    "dependencies": {"type": "array", "items": {"type": "string"}},
+    "allowed_paths": {"type": "array", "items": {"type": "string"}},
+    "forbidden_actions": {"type": "array", "items": {"type": "string"}},
+    "acceptance_criteria": {"type": "array", "items": {"type": "string"}},
+    "verification_commands": {"type": "array", "items": {"type": "string"}},
+    "max_attempts": {"type": "integer", "minimum": 1, "maximum": 3},
+    "budget_note": {"type": "string"}
+  },
+  "additionalProperties": false
+}
