@@ -1,40 +1,52 @@
 # Multi-agent Starter
 
-## Tasarım
+Token-tasarruflu bir Claude Code multi-agent kurulumu. Pahalı orchestrator (ana oturum) planlar/delege eder/birleştirir; ucuz subagent'lar okuma, implementasyon, test ve inceleme işini yapıp sadece damıtılmış rapor döndürür. Her role görev yüküne göre model atanır.
 
-- Orchestrator: planlar, görevleri böler, sonuçları birleştirir.
-- Explorer: salt okunur kod tabanı analizi.
-- Coder: kod dosyalarını değiştirir.
-- Reviewer: diff ve test kanıtlarını inceler; kodu değiştirmez.
-- Tester: test yazar, kodu test eder.
-- Her agent rol talimatlarını bu paketteki `prompts/` klasöründen alır.
+## Yapı
 
-## Dosyalar
+```
+.
+├── .claude/                 # ~/.claude/ ile birebir eşlenir (kurulum hedefi)
+│   ├── CLAUDE.md            # global delegasyon kuralları + model tablosu
+│   └── agents/
+│       ├── explorer.md      # haiku — salt okunur kod tarama
+│       ├── coder.md         # sonnet — atanmış path'lerde implementasyon
+│       ├── reviewer.md      # opus — bağımsız hata bulma
+│       └── tester.md        # haiku — build/lint/test çalıştırma
+├── AGENTS.md               # operatör spesifikasyonu (proje-bazı, kök dosyası)
+├── AGENT_POLICY.md         # ayrıntılı kalite/doğrulama/metrik politikası (referans)
+├── DELEGATION_EXAMPLES.md  # explorer/coder/reviewer task şablonları
+├── schemas/                # ortak sözleşmeler
+│   ├── task.schema.json
+│   └── result.schema.json
+└── install.ps1             # ~/.claude/ içine kuran script
+```
 
-- `prompts/ORCHESTRATOR.md`: ana agentın planlama ve delegasyon politikası.
-- `prompts/EXPLORER.md`: salt okunur araştırmacı.
-- `prompts/CODER.md`: kod değişikliği worker'ı.
-- `prompts/REVIEWER.md`: bağımsız reviewer.
-- `prompts/TESTER.md`: test worker'ı.
-- `AGENT_POLICY.md`: harness-genel kalite, güvenlik ve ölçüm politikası.
-- `schemas/task.schema.json`: ortak görev sözleşmesi.
-- `schemas/result.schema.json`: ortak sonuç sözleşmesi.
+Orchestrator ayrı bir dosya değildir: ana oturumun kendisidir. En güçlü modelde (opus) çalıştır.
 
-## Çalışan kurulum (`.claude/agents/`)
+## Kurulum
 
-`agents/*.md` dosyaları tasarım referansıdır; gerçek Claude Code subagent'ları `.claude/agents/` altında, her biri görev yüküne göre model atanmış şekilde duruyor:
+Repo'nun `.claude/` klasörü global `~/.claude/` ile birebir eşlenir. Kurulum, onu kopyalamaktan ibaret.
 
-| Subagent | Model | Neden |
-|---|---|---|
-| `explorer` | haiku | Salt okunur kod tarama/arama — mekanik, karar içermez. |
-| `coder` | sonnet | Atanmış dosyalarda implementasyon — orta şiddette mühendislik kararı gerekir. |
-| `reviewer` | opus | Bağımsız hata bulma — karar-kritik, derin düşünme gerektirir. |
-| `tester` | haiku | Build/lint/test çalıştırma ve log sınıflandırma — mekanik. |
+**Script ile (Windows):**
 
-Orchestrator ayrı bir subagent değildir: ana oturumun kendisidir (planlar, delege eder, doğrular, birleştirir), bu yüzden en güçlü modelde (opus) çalıştırılması önerilir. Çağırmak için Agent tool'u subagent_type olarak `explorer`/`coder`/`reviewer`/`tester` ile kullan; `AGENT_POLICY.md`'deki delegasyon kuralları (açık deliverable/acceptance criteria, salt-okunur roller kendi sınırında, aynı dosyaya iki worker aynı anda yazamaz, kuplajlı işi paralel değil seri yap) geçerlidir. Eşzamanlı worker sayısı sınırı ve "trivial işi delege etme" kısıtı kaldırıldı; dosya çakışması koruması ise geri eklendi.
+```powershell
+pwsh ./install.ps1
+```
 
-Bu `.claude/agents/` klasörü şu an sadece bu proje için geçerli. Aynı subagent setini başka projelerde de token tasarrufuyla kullanmak istersen, bu 4 dosyayı `~/.claude/agents/` altına kopyalaman yeterli (global subagent'lar tüm projelerde görünür).
+**Elle (her platform):**
 
-## Global AGENTS.md (manuel adım)
+1. `.claude/CLAUDE.md` → `~/.claude/CLAUDE.md` (varsa önce yedekle)
+2. `.claude/agents/*.md` → `~/.claude/agents/`
 
-`AGENTS.md`'deki operatör spesifikasyonunu tüm sohbetlerde (her proje, her dizin) geçerli kılmak için içeriğini `C:\Users\PC\.claude\CLAUDE.md` dosyasına kopyalaman gerekiyor — bu dosya Claude Code tarafından her oturumda, çalışma dizininden bağımsız okunur. Bu yazma işlemini oturum içinden kendim yapamadım (auto-mode, çalışma dizini dışına yazmayı engelliyor); dosya yoksa oluşturup bu projedeki `AGENTS.md` içeriğini içine yapıştırman yeterli.
+**Claude'a kurdurmak için:** Repo dizinini Claude'a verip "bu dizini kendine kur" de — yukarıdaki eşlemeyi uygular.
+
+Kurulumdan sonra her projede `explorer`/`coder`/`reviewer`/`tester` subagent'ları Agent tool'dan görünür.
+
+## Operatör spesifikasyonu (AGENTS.md)
+
+`AGENTS.md` global değildir; her projede geçerli olmasını istediğinde o projenin köküne `AGENTS.md` olarak kopyala. Claude Code onu o proje için otomatik okur.
+
+## Güncelleme
+
+Bu repo tek doğruluk kaynağıdır. Bir rolü değiştirince repoda düzenle, commit/push et, sonra `install.ps1`'i tekrar çalıştır — `~/.claude/` yeniden senkronlanır.
